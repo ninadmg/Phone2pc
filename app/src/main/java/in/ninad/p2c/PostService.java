@@ -8,6 +8,9 @@ import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.regex.Pattern;
 
 import microsoft.aspnet.signalr.client.Action;
@@ -27,6 +30,7 @@ public class PostService extends IntentService {
     private static final String QRCODE = "in.ninad.p2c.extra.QRcode";
     private static final String EXTRA_PARAM = "in.ninad.p2c.extra.PARAM";
 
+    private static final int CHUNK_SIZE = 262144;
     HubConnection conn;
     HubProxy hubProxy;
     Logger logger;
@@ -62,7 +66,9 @@ public class PostService extends IntentService {
                 Log.e("ninad",message);
             }
         };
+
         conn = new HubConnection("http://go.mathewjibin.com/bleed","",true,logger);
+      //  conn = new HubConnection(" http://192.168.2.101/takemethere/bleed","",true,logger);
 
     }
 
@@ -72,6 +78,7 @@ public class PostService extends IntentService {
             mIntent = intent;
             makeConnection();
         }
+        wakeLock.acquire();
     }
 
     private void makeConnection()
@@ -106,7 +113,8 @@ public class PostService extends IntentService {
 
     private void handleActionText(String param1, String param2) {
 
-        Pattern pattern = Pattern.compile("/((([A-Za-z]{3,9}:(?:\\/\\/)?)(?:[-;:&=\\+\\$,\\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\\+\\$,\\w]+@)[A-Za-z0-9.-]+)((?:\\/[\\+~%\\/.\\w-_]*)?\\??(?:[-\\+=&;%@.\\w_]*)#?(?:[\\w]*))?)/");
+        Pattern pattern = Pattern.compile("/((([A-Za-z]{3,9}:(?:\\/\\/)?)(?:[-;:&=\\+\\$,\\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\\+\\$,\\w]+@)[A-Za-z0-9.-]+)((?:\\/[\\+~%\\" +
+                "/._]*)?\\??(?:[-\\+=&;%@.\\w_]*)#?(?:[\\w]*))?)/");
         if(!pattern.matcher(param2).matches()) {
             hubProxy.invoke("Share", param1, "text/uri", param2);
         }
@@ -114,12 +122,83 @@ public class PostService extends IntentService {
         {
             hubProxy.invoke("Share", param1, "text/plain", param2);
         }
+        wakeLock.release();
     }
 
-    private void handleActionImage(String param1, String param2) {
-        FileToUpload file = new FileToUpload();
-        hubProxy.invoke("GetFileKey","");
+    private void handleActionImage(final String param1, String param2) {
+        final FileToUpload file = new FileToUpload(param2,"img1","Image");
+
+        hubProxy.invoke(String.class,"GetFileKey",file.length()).done(new Action<String>() {
+            @Override
+            public void run(String obj) throws Exception {
+                sendImage(obj,file,param1);
+            }
+        });
+
     }
 
+    private void sendImage(final String fileKey,FileToUpload file, final String param1) {
+        final long totalBytes = file.length();
+        long uploadedBytes = 0;
+        final int totalpages = (int) (totalBytes/CHUNK_SIZE) +1;
+
+
+        InputStream stream = null;
+        try {
+            stream = file.getStream();
+            byte[] buffer = new byte[CHUNK_SIZE];
+            long bytesRead;
+            final int[] page = {1,1};
+
+            while ((bytesRead = stream.read(buffer, 0, buffer.length)) > 0) {
+               // String stringToStore = new String(Base64.encode(buffer,Base64.DEFAULT));
+                hubProxy.invoke(Boolean.class,"FileChunk",fileKey, page[0]++, buffer).done(new Action<Boolean>() {
+                    @Override
+                    public void run(Boolean obj) throws Exception {
+                        Log.e("ninadlog","success invoke return "+obj);
+                        if (page[1]++==totalpages)
+                        {
+                            completeImageShare(fileKey,param1);
+                        }
+                    }
+                }).onError(new ErrorCallback() {
+                    @Override
+                    public void onError(Throwable error) {
+                        Log.e("ninadlog","error invoke return "+error.getMessage());
+                    }
+                });
+                uploadedBytes += bytesRead;
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            closeInputStream(stream);
+            ;
+        }
+
+    }
+
+    private void completeImageShare(String fileKey,String param1)
+    {
+        hubProxy.invoke("Share",param1,"image/jpeg",fileKey).onError(new ErrorCallback() {
+            @Override
+            public void onError(Throwable error) {
+                Log.e("ninadlog","error share return "+error.getMessage());
+            }
+        });
+        wakeLock.release();
+    }
+
+    private void closeInputStream(final InputStream stream) {
+        if (stream != null) {
+            try {
+                stream.close();
+            } catch (Exception exc) {
+            }
+        }
+    }
 
 }

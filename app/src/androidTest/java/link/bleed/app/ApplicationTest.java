@@ -1,4 +1,4 @@
-package in.ninad.p2c;
+package link.bleed.app;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

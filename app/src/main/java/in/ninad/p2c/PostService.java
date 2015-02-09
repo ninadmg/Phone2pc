@@ -78,7 +78,16 @@ public class PostService extends IntentService {
             mIntent = intent;
             makeConnection();
         }
+
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "bleed");
         wakeLock.acquire();
+
     }
 
     private void makeConnection()

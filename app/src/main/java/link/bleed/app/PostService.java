@@ -1,11 +1,9 @@
-package in.ninad.p2c;
+package link.bleed.app;
 
 import android.app.IntentService;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.io.FileNotFoundException;
@@ -23,20 +21,20 @@ import microsoft.aspnet.signalr.client.hubs.HubProxy;
 
 public class PostService extends IntentService {
 
-    private static final String ACTION_TEXT = "in.ninad.p2c.action.TEXT";
-    private static final String ACTION_IMAGE = "in.ninad.p2c.action.IMAGE";
+    private static final String ACTION_TEXT = "link.bleed.p2c.action.TEXT";
+    private static final String ACTION_IMAGE = "link.bleed.p2c.action.IMAGE";
 
 
-    private static final String QRCODE = "in.ninad.p2c.extra.QRcode";
-    private static final String EXTRA_PARAM = "in.ninad.p2c.extra.PARAM";
+    private static final String QRCODE = "link.bleed.p2c.extra.QRcode";
+    private static final String EXTRA_PARAM = "link.bleed.p2c.extra.PARAM";
 
     private static final int CHUNK_SIZE = 262144;
     HubConnection conn;
     HubProxy hubProxy;
     Logger logger;
     Intent mIntent;
-    private NotificationManager notificationManager;
-    private NotificationCompat.Builder notification;
+//    private NotificationManager notificationManager;
+//    private NotificationCompat.Builder notification;
     private PowerManager.WakeLock wakeLock;
     private int lastPublishedProgress;
 
@@ -63,7 +61,7 @@ public class PostService extends IntentService {
 
             @Override
             public void log(String message, LogLevel level) {
-                Log.e("ninad",message);
+                Log.e("bleed",message);
             }
         };
 
@@ -101,7 +99,7 @@ public class PostService extends IntentService {
         }).onError(new ErrorCallback() {
             @Override
             public void onError(Throwable error) {
-                Log.e("ninad",error.getMessage());
+                Log.e("bleed",error.getMessage());
             }
         });
     }

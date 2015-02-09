@@ -1,4 +1,4 @@
-package in.ninad.p2c;
+package link.bleed.app;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -9,7 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 /**
- * Created by ninad on 05-02-2015.
+ * Created by bleed on 05-02-2015.
  */
 public class FileToUpload implements Parcelable {
 

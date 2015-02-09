@@ -1,4 +1,4 @@
-package in.ninad.p2c;
+package link.bleed.app;
 
 import android.app.Activity;
 import android.content.Context;
@@ -42,7 +42,7 @@ public class MainActivity extends Activity implements ZXingScannerView.ResultHan
 
     private void handleSendImage(String url,String qrcode) {
         PostService.startActionImage(MainActivity.this,qrcode,url);
-
+        finish();
     }
 
     private void handleSendText(String url,String qrcode) {
@@ -75,7 +75,7 @@ public class MainActivity extends Activity implements ZXingScannerView.ResultHan
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        // as you specify a parent activity link AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -96,7 +96,7 @@ public class MainActivity extends Activity implements ZXingScannerView.ResultHan
             if ("text/plain".equals(type)) {
                 handleSendText(intent.getClipData().getItemAt(0).getText().toString(),result.getText()); // Handle text being sent
             } else if (type.startsWith("image/")) {
-                handleSendImage(getRealPathFromUri(this,intent.getClipData().getItemAt(0).getUri()),result.getText()); // Handle single image being sent
+                handleSendImage(Utilities.getPath(this,intent.getClipData().getItemAt(0).getUri()),result.getText()); // Handle single image being sent
             }
             else if(type.startsWith("video/")){
                 handleSendVideo(intent);

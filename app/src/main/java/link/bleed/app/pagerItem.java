@@ -1,9 +1,9 @@
-package in.ninad.p2c;
+package link.bleed.app;
 
 import java.io.Serializable;
 
 /**
- * Created by ninad on 05-02-2015.
+ * Created by bleed on 05-02-2015.
  */
 public class pagerItem implements Serializable{
 

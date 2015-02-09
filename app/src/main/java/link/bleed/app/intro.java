@@ -1,4 +1,4 @@
-package in.ninad.p2c;
+package link.bleed.app;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -7,9 +7,11 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import com.crashlytics.android.Crashlytics;
+import io.fabric.sdk.android.Fabric;
 
 /**
- * Created by ninad on 05-02-2015.
+ * Created by bleed on 05-02-2015.
  */
 public class intro extends FragmentActivity {
 
@@ -21,6 +23,7 @@ public class intro extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_main);
         initPages();
         mPager = (ViewPager) findViewById(R.id.container);
@@ -32,8 +35,8 @@ public class intro extends FragmentActivity {
     {
         pagerItems[0]= new pagerItem(R.drawable.ic_launcher,"What is Bleed useful for?","Bleed helps you share text, urls and images from one of your device to other devices. If you are browsing on your mobile or have a link which you need to open on a desktop, Bleed can help.");
         pagerItems[1]= new pagerItem(R.drawable.screen2,"How to use Bleed?","Touch on the link or share the link from menu-> share option and choose Bleed. This will now open a QRCode scanner");
-        pagerItems[2]= new pagerItem(R.drawable.screen3,"Scan the code","Open the webpage http://Bleed.link on your other device on which you want to open the link in. That page will display a QRCode image. Scan this code with your Bleed App.");
-        pagerItems[3]= new pagerItem(R.drawable.screen4,"Awesomeness","If you shared a url, the webpage that displayed the QRCode will now get redirected to that url, else the received content will be displayed in the website.");
+        pagerItems[2]= new pagerItem(R.drawable.screen3,"Scan the code","Open the webpage http://Bleed.link on your other device on which you want to open the link link. That page will display a QRCode image. Scan this code with your Bleed App.");
+        pagerItems[3]= new pagerItem(R.drawable.screen4,"Awesomeness","If you shared a url, the webpage that displayed the QRCode will now get redirected to that url, else the received content will be displayed link the website.");
 
     }
 

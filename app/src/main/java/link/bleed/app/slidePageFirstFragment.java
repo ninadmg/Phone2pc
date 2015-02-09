@@ -1,4 +1,4 @@
-package in.ninad.p2c;
+package link.bleed.app;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -9,9 +9,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
- * Created by ninad on 05-02-2015.
+ * Created by bleed on 05-02-2015.
  */
-public class SlidePageFragment extends Fragment {
+public class slidePageFirstFragment extends Fragment {
 
     pagerItem page;
 
@@ -26,7 +26,7 @@ public class SlidePageFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         ViewGroup View = (ViewGroup) inflater.inflate(
-                R.layout.intro, container, false);
+                R.layout.into_first, container, false);
         ImageView imageView = (ImageView) View.findViewById(R.id.mainImage);
         TextView title = (TextView) View.findViewById(R.id.textView2);
         TextView desc = (TextView) View.findViewById(R.id.textView);
@@ -37,10 +37,10 @@ public class SlidePageFragment extends Fragment {
         return View;
     }
 
-    public static SlidePageFragment newInstance(pagerItem page) {
-        SlidePageFragment fragmentFirst = new SlidePageFragment();
+    public static slidePageFirstFragment newInstance(pagerItem page) {
+        slidePageFirstFragment fragmentFirst = new slidePageFirstFragment();
         Bundle args = new Bundle();
-        args.putSerializable("item",page);
+        args.putSerializable("item", page);
         fragmentFirst.setArguments(args);
         return fragmentFirst;
     }

@@ -1,36 +1,52 @@
 package link.bleed.app;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.FrameLayout;
+import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.zxing.Result;
 
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 
-public class MainActivity extends Activity implements ZXingScannerView.ResultHandler{
+public class MainActivity extends ActionBarActivity implements ZXingScannerView.ResultHandler{
 
-    private ZXingScannerView mScannerView;
+    FrameLayout frameLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mScannerView = new ZXingScannerView(this);   // Programmatically initialize the scanner view
-        setContentView(mScannerView);
+        setContentView(R.layout.fragmentholder);
+        frameLayout = (FrameLayout) findViewById(R.id.frame);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setupToolbar(toolbar);
+        if(getSupportActionBar()!=null) {
+            setSupportActionBar(toolbar);
+        }
 
     }
 
+    private void setupToolbar(Toolbar toolbar)
+    {
+        toolbar.setTitle(" "+getString(R.string.app_name));
+        toolbar.setLogo(R.drawable.ic_launcher);
+        toolbar.setTitleTextColor(getResources().getColor(R.color.text_color));
+
+    }
 
     @Override
     protected void onStart() {
         super.onStart();
+
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.frame,new ScannerFragment(),"scan")
+                .commit();
 
     }
 
@@ -41,6 +57,11 @@ public class MainActivity extends Activity implements ZXingScannerView.ResultHan
     }
 
     private void handleSendImage(String url,String qrcode) {
+        if(url==null)
+        {
+            Toast.makeText(this,"Please try again",Toast.LENGTH_SHORT).show();
+            Crashlytics.log("Path returns null");
+        }
         PostService.startActionImage(MainActivity.this,qrcode,url);
         finish();
     }
@@ -50,18 +71,6 @@ public class MainActivity extends Activity implements ZXingScannerView.ResultHan
         finish();
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        mScannerView.setResultHandler(this); // Register ourselves as a handler for scan results.
-        mScannerView.startCamera();          // Start camera on resume
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        mScannerView.stopCamera();           // Stop camera on pause
-    }
 
 
     @Override
@@ -106,21 +115,8 @@ public class MainActivity extends Activity implements ZXingScannerView.ResultHan
         {
                handleSendText( intent.getData().toString(),result.getText());
         }
-//        Toast.makeText(this,result.getText(),Toast.LENGTH_SHORT).show();
+
     }
 
-    public static String getRealPathFromUri(Context context, Uri contentUri) {
-        Cursor cursor = null;
-        try {
-            String[] proj = { MediaStore.Images.Media.DATA };
-            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToFirst();
-            return cursor.getString(column_index);
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-    }
+
 }

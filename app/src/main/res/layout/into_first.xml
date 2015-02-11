@@ -33,6 +33,7 @@
         android:layout_margin="10dp"
         android:textSize="22sp"
         android:gravity="center"
+        android:lineSpacingExtra="4sp"
         android:textColor="#343434"
         android:layout_below="@id/textView2"
         android:layout_centerHorizontal="true" />

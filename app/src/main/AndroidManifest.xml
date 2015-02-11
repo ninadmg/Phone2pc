@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="in.ninad.p2c" >
+    package="link.bleed.app" >
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -44,9 +44,13 @@
 
         <service
             android:name=".PostService"
-            android:exported="false" >
+            android:enabled="true"
+            android:exported="true" >
         </service>
 
+        <meta-data
+            android:name="com.crashlytics.ApiKey"
+            android:value="31de0cbe18f061d6a3cb2753a0f3041341503c8c" />
     </application>
 
 </manifest>

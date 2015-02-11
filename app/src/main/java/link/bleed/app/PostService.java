@@ -1,9 +1,12 @@
 package link.bleed.app;
 
 import android.app.IntentService;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.io.FileNotFoundException;
@@ -33,10 +36,10 @@ public class PostService extends IntentService {
     HubProxy hubProxy;
     Logger logger;
     Intent mIntent;
-//    private NotificationManager notificationManager;
-//    private NotificationCompat.Builder notification;
+    private NotificationManager notificationManager;
+    private NotificationCompat.Builder notification;
     private PowerManager.WakeLock wakeLock;
-    private int lastPublishedProgress;
+
 
     public static void startActionText(Context context, String param1, String param2) {
         Intent intent = new Intent(context, PostService.class);
@@ -61,12 +64,12 @@ public class PostService extends IntentService {
 
             @Override
             public void log(String message, LogLevel level) {
-                Log.e("bleed",message);
+//                Log.e("bleed",message);
             }
         };
 
-        conn = new HubConnection("http://go.mathewjibin.com/bleed","",true,logger);
-      //  conn = new HubConnection(" http://192.168.2.101/takemethere/bleed","",true,logger);
+        conn = new HubConnection("http://bleed.link/bleed","",true,logger);
+//        conn = new HubConnection(" http://192.168.2.101/takemethere/bleed","",true,logger);
 
     }
 
@@ -75,6 +78,7 @@ public class PostService extends IntentService {
         if (intent != null) {
             mIntent = intent;
             makeConnection();
+
         }
 
     }
@@ -82,6 +86,8 @@ public class PostService extends IntentService {
     @Override
     public void onCreate() {
         super.onCreate();
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notification = new NotificationCompat.Builder(this);
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "bleed");
         wakeLock.acquire();
@@ -146,7 +152,6 @@ public class PostService extends IntentService {
 
     private void sendImage(final String fileKey,FileToUpload file, final String param1) {
         final long totalBytes = file.length();
-        long uploadedBytes = 0;
         final int totalpages = (int) (totalBytes/CHUNK_SIZE) +1;
 
 
@@ -156,6 +161,7 @@ public class PostService extends IntentService {
             byte[] buffer = new byte[CHUNK_SIZE];
             long bytesRead;
             final int[] page = {1,1};
+            createNotification();
 
             while ((bytesRead = stream.read(buffer, 0, buffer.length)) > 0) {
                // String stringToStore = new String(Base64.encode(buffer,Base64.DEFAULT));
@@ -166,6 +172,7 @@ public class PostService extends IntentService {
                         if (page[1]++==totalpages)
                         {
                             completeImageShare(fileKey,param1);
+                            updateNotificationCompleted();
                         }
                     }
                 }).onError(new ErrorCallback() {
@@ -174,16 +181,18 @@ public class PostService extends IntentService {
                         Log.e("ninadlog","error invoke return "+error.getMessage());
                     }
                 });
-                uploadedBytes += bytesRead;
+
+                updateNotificationProgress(((page[0]-1)*100)/totalpages);
             }
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             closeInputStream(stream);
-            ;
+            updateNotificationCompleted();
         }
 
     }
@@ -196,7 +205,9 @@ public class PostService extends IntentService {
                 Log.e("ninadlog","error share return "+error.getMessage());
             }
         });
-        wakeLock.release();
+        if(wakeLock.isHeld()) {
+            wakeLock.release();
+        }
     }
 
     private void closeInputStream(final InputStream stream) {
@@ -204,8 +215,40 @@ public class PostService extends IntentService {
             try {
                 stream.close();
             } catch (Exception exc) {
+                exc.printStackTrace();
             }
         }
     }
+
+
+
+    private void createNotification() {
+        notification.setContentTitle("Bleed").setContentText("Uploading")
+                .setContentIntent(PendingIntent.getBroadcast(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT))
+                .setSmallIcon(R.drawable.ic_stat_notifi).
+                setProgress(100, 0, true).setOngoing(true);
+
+        startForeground(1,notification.build() );
+        notificationManager.notify(1,notification.build());
+    }
+
+    private void updateNotificationProgress(final int progress) {
+        notification.setContentTitle("Bleed").setContentText("Uploading")
+                .setSmallIcon(R.drawable.ic_launcher).setProgress(100, progress, false)
+                .setOngoing(true);
+
+        startForeground(1, notification.build());
+        notificationManager.notify(1,notification.build());
+    }
+
+    private void updateNotificationCompleted() {
+        stopForeground(true);
+        if(wakeLock.isHeld()) {
+            wakeLock.release();
+        }
+        notificationManager.cancel(1);
+
+    }
+
 
 }

@@ -10,12 +10,12 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
-import com.google.zxing.Result;
 
-import me.dm7.barcodescanner.zxing.ZXingScannerView;
+import me.dm7.barcodescanner.zbar.Result;
+import me.dm7.barcodescanner.zbar.ZBarScannerView;
 
 
-public class MainActivity extends ActionBarActivity implements ZXingScannerView.ResultHandler{
+public class MainActivity extends ActionBarActivity implements ZBarScannerView.ResultHandler{
 
     FrameLayout frameLayout;
 
@@ -103,9 +103,9 @@ public class MainActivity extends ActionBarActivity implements ZXingScannerView.
 
             String type = intent.getType();
             if ("text/plain".equals(type)) {
-                handleSendText(intent.getClipData().getItemAt(0).getText().toString(),result.getText()); // Handle text being sent
+                handleSendText(intent.getClipData().getItemAt(0).getText().toString(),result.getContents()); // Handle text being sent
             } else if (type.startsWith("image/")) {
-                handleSendImage(Utilities.getPath(this,intent.getClipData().getItemAt(0).getUri()),result.getText()); // Handle single image being sent
+                handleSendImage(Utilities.getPath(this,intent.getClipData().getItemAt(0).getUri()),result.getContents()); // Handle single image being sent
             }
             else if(type.startsWith("video/")){
                 handleSendVideo(intent);
@@ -113,7 +113,7 @@ public class MainActivity extends ActionBarActivity implements ZXingScannerView.
         }
         if(intent.getAction().equals(Intent.ACTION_VIEW))
         {
-               handleSendText( intent.getData().toString(),result.getText());
+               handleSendText( intent.getData().toString(),result.getContents());
         }
 
     }

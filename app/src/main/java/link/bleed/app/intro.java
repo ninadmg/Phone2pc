@@ -7,7 +7,10 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+
 import com.crashlytics.android.Crashlytics;
+import com.viewpagerindicator.LinePageIndicator;
+
 import io.fabric.sdk.android.Fabric;
 
 /**
@@ -29,6 +32,17 @@ public class intro extends FragmentActivity {
         mPager = (ViewPager) findViewById(R.id.container);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
+        LinePageIndicator pageIndicator = (LinePageIndicator) findViewById(R.id.titles);
+        setupIndicator(pageIndicator);
+    }
+
+    private void setupIndicator(LinePageIndicator pageIndicator)
+    {
+        final float density = getResources().getDisplayMetrics().density;
+        pageIndicator.setSelectedColor(getResources().getColor(R.color.primary_color));
+        pageIndicator.setViewPager(mPager);
+        pageIndicator.setStrokeWidth(4 * density);
+        pageIndicator.setLineWidth(30 * density);
     }
 
     private void initPages()

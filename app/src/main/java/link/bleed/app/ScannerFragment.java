@@ -8,30 +8,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.zxing.Result;
-
-import me.dm7.barcodescanner.zxing.ZXingScannerView;
+import me.dm7.barcodescanner.zbar.Result;
+import me.dm7.barcodescanner.zbar.ZBarScannerView;
 
 /**
  * Created by ninad on 11-02-2015.
  */
-public class ScannerFragment extends Fragment implements ZXingScannerView.ResultHandler{
+public class ScannerFragment extends Fragment implements ZBarScannerView.ResultHandler{
 
-    private ZXingScannerView mScannerView;
+    private ZBarScannerView mScannerView;
 
-
-    @Override
-    public void handleResult(Result result) {
-        if(getActivity() instanceof ZXingScannerView.ResultHandler)
-        {
-            ((ZXingScannerView.ResultHandler) getActivity()).handleResult(result);
-        }
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        mScannerView = new ZXingScannerView(getActivity());
+        mScannerView = new ZBarScannerView(getActivity());
 
         return mScannerView;
     }
@@ -49,4 +40,11 @@ public class ScannerFragment extends Fragment implements ZXingScannerView.Result
         mScannerView.stopCamera();           // Stop camera on pause
     }
 
+    @Override
+    public void handleResult(Result result) {
+        if(getActivity() instanceof ZBarScannerView.ResultHandler)
+        {
+            ((ZBarScannerView.ResultHandler) getActivity()).handleResult(result);
+        }
+    }
 }

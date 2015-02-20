@@ -1,4 +1,4 @@
-package link.bleed.app;
+package link.bleed.app.Utils;
 
 import android.content.ContentUris;
 import android.content.Context;
@@ -13,6 +13,7 @@ import android.provider.MediaStore;
  * Created by ninad on 09-02-2015.
  */
 public class Utilities {
+
 
     public static String getPath(Context context,final Uri uri) {
         try {
@@ -65,11 +66,13 @@ public class Utilities {
 
         Cursor cursor = null;
         final String column = "_data";
+//        final String column = MediaStore.Images.Thumbnails.DATA;
         final String[] projection = {
                 column
         };
 
         try {
+
             cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
             if (cursor != null && cursor.moveToFirst()) {
                 final int column_index = cursor.getColumnIndexOrThrow(column);

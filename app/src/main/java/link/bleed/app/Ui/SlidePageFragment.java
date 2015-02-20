@@ -1,4 +1,4 @@
-package link.bleed.app;
+package link.bleed.app.Ui;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -7,6 +7,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import link.bleed.app.Models.pagerItem;
+import link.bleed.app.R;
 
 /**
  * Created by bleed on 05-02-2015.

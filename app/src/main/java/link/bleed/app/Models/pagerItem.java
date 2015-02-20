@@ -1,4 +1,4 @@
-package link.bleed.app;
+package link.bleed.app.Models;
 
 import java.io.Serializable;
 

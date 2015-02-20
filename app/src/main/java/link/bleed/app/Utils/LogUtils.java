@@ -1,8 +1,10 @@
-package link.bleed.app;
+package link.bleed.app.Utils;
 
 import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
+
+import link.bleed.app.BuildConfig;
 
 /**
  * Created by ninad on 09-02-2015.

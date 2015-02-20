@@ -1,4 +1,4 @@
-package link.bleed.app;
+package link.bleed.app.Ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,6 +11,10 @@ import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 
+import link.bleed.app.Network.PostService;
+import link.bleed.app.R;
+import link.bleed.app.Utils.ImageResizer;
+import link.bleed.app.Utils.Utilities;
 import me.dm7.barcodescanner.zbar.Result;
 import me.dm7.barcodescanner.zbar.ZBarScannerView;
 
@@ -62,7 +66,10 @@ public class MainActivity extends ActionBarActivity implements ZBarScannerView.R
             Toast.makeText(this,"Please try again",Toast.LENGTH_SHORT).show();
             Crashlytics.log("Path returns null");
         }
-        PostService.startActionImage(MainActivity.this,qrcode,url);
+
+
+        url = ImageResizer.getResizedImage(url);
+        PostService.startActionImage(MainActivity.this, qrcode, url);
         finish();
     }
 
@@ -105,7 +112,7 @@ public class MainActivity extends ActionBarActivity implements ZBarScannerView.R
             if ("text/plain".equals(type)) {
                 handleSendText(intent.getClipData().getItemAt(0).getText().toString(),result.getContents()); // Handle text being sent
             } else if (type.startsWith("image/")) {
-                handleSendImage(Utilities.getPath(this,intent.getClipData().getItemAt(0).getUri()),result.getContents()); // Handle single image being sent
+                handleSendImage(Utilities.getPath(this, intent.getClipData().getItemAt(0).getUri()),result.getContents()); // Handle single image being sent
             }
             else if(type.startsWith("video/")){
                 handleSendVideo(intent);

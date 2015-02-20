@@ -1,4 +1,4 @@
-package link.bleed.app;
+package link.bleed.app.Network;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
@@ -9,11 +9,15 @@ import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
+import link.bleed.app.Constants;
+import link.bleed.app.Models.FileToUpload;
+import link.bleed.app.Models.NameValue;
+import link.bleed.app.R;
+import link.bleed.app.Utils.ImageResizer;
 import microsoft.aspnet.signalr.client.Action;
 import microsoft.aspnet.signalr.client.ErrorCallback;
 import microsoft.aspnet.signalr.client.LogLevel;
@@ -29,9 +33,8 @@ public class PostService extends IntentService {
 
 
     private static final String QRCODE = "link.bleed.p2c.extra.QRcode";
-    private static final String EXTRA_PARAM = "link.bleed.p2c.extra.PARAM";
+    private static final String EXTRA_URL = "link.bleed.p2c.extra.URL";
 
-    private static final int CHUNK_SIZE = 262144;
     HubConnection conn;
     HubProxy hubProxy;
     Logger logger;
@@ -45,7 +48,7 @@ public class PostService extends IntentService {
         Intent intent = new Intent(context, PostService.class);
         intent.setAction(ACTION_TEXT);
         intent.putExtra(QRCODE, param1);
-        intent.putExtra(EXTRA_PARAM, param2);
+        intent.putExtra(EXTRA_URL, param2);
         context.startService(intent);
     }
 
@@ -54,7 +57,7 @@ public class PostService extends IntentService {
         Intent intent = new Intent(context, PostService.class);
         intent.setAction(ACTION_IMAGE);
         intent.putExtra(QRCODE, param1);
-        intent.putExtra(EXTRA_PARAM, param2);
+        intent.putExtra(EXTRA_URL, param2);
         context.startService(intent);
     }
 
@@ -68,8 +71,8 @@ public class PostService extends IntentService {
             }
         };
 
-        conn = new HubConnection("http://bleed.link/bleed","",true,logger);
-//        conn = new HubConnection(" http://192.168.2.101/takemethere/bleed","",true,logger);
+        conn = new HubConnection(Constants.URL+"bleed","",true,logger);
+//        conn = new HubConnection(" http://192.168.2.101/TakeMeThere/bleed","",true,logger);
 
     }
 
@@ -108,6 +111,7 @@ public class PostService extends IntentService {
                 Log.e("bleed",error.getMessage());
             }
         });
+
     }
 
     private void sendShare()
@@ -115,15 +119,14 @@ public class PostService extends IntentService {
         String action = mIntent.getAction();
         if (ACTION_TEXT.equals(action)) {
             final String param1 = mIntent.getStringExtra(QRCODE);
-            final String param2 = mIntent.getStringExtra(EXTRA_PARAM);
+            final String param2 = mIntent.getStringExtra(EXTRA_URL);
             handleActionText(param1, param2);
         } else if (ACTION_IMAGE.equals(action)) {
             final String param1 = mIntent.getStringExtra(QRCODE);
-            final String param2 = mIntent.getStringExtra(EXTRA_PARAM);
+            final String param2 = mIntent.getStringExtra(EXTRA_URL);
             handleActionImage(param1, param2);
         }
     }
-
     private void handleActionText(String param1, String param2) {
 
         Pattern pattern = Pattern.compile("/((([A-Za-z]{3,9}:(?:\\/\\/)?)(?:[-;:&=\\+\\$,\\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\\+\\$,\\w]+@)[A-Za-z0-9.-]+)((?:\\/[\\+~%\\" +
@@ -138,64 +141,105 @@ public class PostService extends IntentService {
         wakeLock.release();
     }
 
-    private void handleActionImage(final String param1, String param2) {
-        final FileToUpload file = new FileToUpload(param2,"img1","Image");
+    private void handleActionImage(final String param1, final String ImageUrl) {
 
+        FileToUpload file = new FileToUpload(ImageUrl,"imgi","content","Image");
         hubProxy.invoke(String.class,"GetFileKey",file.length()).done(new Action<String>() {
             @Override
             public void run(String obj) throws Exception {
-                sendImage(obj,file,param1);
+
+                UploadThubnail(param1, ImageUrl, obj);
+                uploadImage(param1, ImageUrl, obj);
+
+            }
+        }).onError(new ErrorCallback() {
+            @Override
+            public void onError(Throwable error) {
+                Log.e("ninadlog","error invoke return "+error.getMessage());
             }
         });
-
     }
 
-    private void sendImage(final String fileKey,FileToUpload file, final String param1) {
-        final long totalBytes = file.length();
-        final int totalpages = (int) (totalBytes/CHUNK_SIZE) +1;
 
+    private void uploadImage(final String qrCode, String ImageUrl, final String storeKey)
+    {
 
-        InputStream stream = null;
+        ArrayList<NameValue> requestHeaders = new ArrayList<NameValue>();
+        FileToUpload file = new FileToUpload(ImageUrl,"imgi","content","Image");
+        ArrayList<FileToUpload> filesToUpload = new ArrayList<FileToUpload>();
+        filesToUpload.add(file);
+        ArrayList<NameValue> requestParameters = new ArrayList<NameValue>();
+        requestParameters.add(new NameValue("clientId", conn.getConnectionId()));
+        requestParameters.add(new NameValue("isLite","false"));
+        requestParameters.add(new NameValue("storeKey",storeKey));
+
         try {
-            stream = file.getStream();
-            byte[] buffer = new byte[CHUNK_SIZE];
-            long bytesRead;
-            final int[] page = {1,1};
-            createNotification();
+            new ImageUpload().handleFileUpload("1001",Constants.URL+"home/payload","POST"
+                    ,filesToUpload,requestHeaders,requestParameters,new UploadProgressListener(){
 
-            while ((bytesRead = stream.read(buffer, 0, buffer.length)) > 0) {
-               // String stringToStore = new String(Base64.encode(buffer,Base64.DEFAULT));
-                hubProxy.invoke(Boolean.class,"FileChunk",fileKey, page[0]++, buffer).done(new Action<Boolean>() {
-                    @Override
-                    public void run(Boolean obj) throws Exception {
-                        Log.e("ninadlog","success invoke return "+obj);
-                        if (page[1]++==totalpages)
-                        {
-                            completeImageShare(fileKey,param1);
-                            updateNotificationCompleted();
-                        }
-                    }
-                }).onError(new ErrorCallback() {
-                    @Override
-                    public void onError(Throwable error) {
-                        Log.e("ninadlog","error invoke return "+error.getMessage());
-                    }
-                });
+                @Override
+                public void uploadStarted() {
+                    createNotification();
+                }
 
-                updateNotificationProgress(((page[0]-1)*100)/totalpages);
-            }
+                @Override
+                public void uploadUpdate(int percentage) {
+                    updateNotificationProgress(percentage);
+                }
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+                @Override
+                public void uploadComplete() {
+                    updateNotificationCompleted();
+                    completeImageShare(storeKey,qrCode);
+                }
+            });
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-        finally {
-            closeInputStream(stream);
-            updateNotificationCompleted();
-        }
-
     }
+
+    private void UploadThubnail(final String qrCode, String ImageUrl, final String storeKey)
+    {
+        ArrayList<NameValue> requestHeaders = new ArrayList<NameValue>();
+        FileToUpload file = new FileToUpload(ImageResizer.getResizedImage(ImageUrl,true),"imgi","content","Image");
+        ArrayList<FileToUpload> filesToUpload = new ArrayList<FileToUpload>();
+        filesToUpload.add(file);
+        ArrayList<NameValue> requestParameters = new ArrayList<NameValue>();
+        requestParameters.add(new NameValue("clientId", conn.getConnectionId()));
+        requestParameters.add(new NameValue("isLite","true"));
+        requestParameters.add(new NameValue("storeKey",storeKey));
+
+
+        try {
+            new ImageUpload().handleFileUpload("1002" , Constants.URL + "home/payload" , "POST"
+                    , filesToUpload, requestHeaders, requestParameters, new UploadProgressListener() {
+                @Override
+                public void uploadStarted() {
+
+                }
+
+                @Override
+                public void uploadUpdate(int percentage) {
+
+                }
+
+                @Override
+                public void uploadComplete() {
+                    hubProxy.invoke("Share",qrCode,"liteimage/jpeg",storeKey).onError(new ErrorCallback() {
+                        @Override
+                        public void onError(Throwable error) {
+                            Log.e("ninadlog","error share return "+error.getMessage());
+                        }
+                    });
+//                    completeImageShare(storeKey,qrCode);
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void completeImageShare(String fileKey,String param1)
     {
@@ -210,19 +254,7 @@ public class PostService extends IntentService {
         }
     }
 
-    private void closeInputStream(final InputStream stream) {
-        if (stream != null) {
-            try {
-                stream.close();
-            } catch (Exception exc) {
-                exc.printStackTrace();
-            }
-        }
-    }
-
-
-
-    private void createNotification() {
+     private void createNotification() {
         notification.setContentTitle("Bleed").setContentText("Uploading")
                 .setContentIntent(PendingIntent.getBroadcast(this, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT))
                 .setSmallIcon(R.drawable.ic_stat_notifi).
@@ -234,7 +266,7 @@ public class PostService extends IntentService {
 
     private void updateNotificationProgress(final int progress) {
         notification.setContentTitle("Bleed").setContentText("Uploading")
-                .setSmallIcon(R.drawable.ic_launcher).setProgress(100, progress, false)
+                .setSmallIcon(R.drawable.ic_stat_notifi).setProgress(100, progress, false)
                 .setOngoing(true);
 
         startForeground(1, notification.build());
@@ -249,6 +281,8 @@ public class PostService extends IntentService {
         notificationManager.cancel(1);
 
     }
+
+
 
 
 }

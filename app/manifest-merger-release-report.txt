@@ -56,7 +56,7 @@ MERGED from com.android.support:support-v4:21.0.3:16:5
 		ADDED from AndroidManifest.xml:13:9
 	android:theme
 		ADDED from AndroidManifest.xml:15:9
-activity#link.bleed.app.MainActivity
+activity#link.bleed.app.Ui.MainActivity
 ADDED from AndroidManifest.xml:16:9
 	android:label
 		ADDED from AndroidManifest.xml:18:13
@@ -86,7 +86,7 @@ category#android.intent.category.BROWSABLE
 ADDED from AndroidManifest.xml:31:17
 	android:name
 		ADDED from AndroidManifest.xml:31:27
-activity#link.bleed.app.intro
+activity#link.bleed.app.Ui.intro
 ADDED from AndroidManifest.xml:36:9
 	android:label
 		ADDED from AndroidManifest.xml:38:13
@@ -102,7 +102,7 @@ category#android.intent.category.LAUNCHER
 ADDED from AndroidManifest.xml:41:17
 	android:name
 		ADDED from AndroidManifest.xml:41:27
-service#link.bleed.app.PostService
+service#link.bleed.app.Network.PostService
 ADDED from AndroidManifest.xml:45:9
 	android:exported
 		ADDED from AndroidManifest.xml:48:13

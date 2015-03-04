@@ -1,6 +1,7 @@
 package link.bleed.app.Ui;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
@@ -10,6 +11,8 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
+
+import java.util.ArrayList;
 
 import link.bleed.app.Network.PostService;
 import link.bleed.app.R;
@@ -78,6 +81,16 @@ public class MainActivity extends ActionBarActivity implements ZBarScannerView.R
         finish();
     }
 
+    void handleSendMultipleImages(Intent intent,String qrcode) {
+        ArrayList<Uri> imageUris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+        if (imageUris != null) {
+            Intent actIntent = new Intent(MainActivity.this,ImagePagerActivity.class);
+            actIntent.putExtra(ImagePagerActivity.QRCODE,qrcode);
+            actIntent.putExtra(ImagePagerActivity.IMAGGELIST,imageUris);
+            startActivity(actIntent);
+            finish();
+        }
+    }
 
 
     @Override
@@ -105,10 +118,12 @@ public class MainActivity extends ActionBarActivity implements ZBarScannerView.R
     @Override
     public void handleResult(Result result) {
         Intent intent  = getIntent();
-        if(intent.getAction().equals(Intent.ACTION_SEND))
+        String type = intent.getType();
+        String action = intent.getAction();
+        if(action.equals(Intent.ACTION_SEND))
         {
 
-            String type = intent.getType();
+
             if ("text/plain".equals(type)) {
                 handleSendText(intent.getClipData().getItemAt(0).getText().toString(),result.getContents()); // Handle text being sent
             } else if (type.startsWith("image/")) {
@@ -118,7 +133,12 @@ public class MainActivity extends ActionBarActivity implements ZBarScannerView.R
                 handleSendVideo(intent);
             }
         }
-        if(intent.getAction().equals(Intent.ACTION_VIEW))
+        else if (Intent.ACTION_SEND_MULTIPLE.equals(action) && type != null) {
+            if (type.startsWith("image/")) {
+                handleSendMultipleImages(intent,result.getContents()); // Handle multiple images being sent
+            }
+        }
+        if(action.equals(Intent.ACTION_VIEW))
         {
                handleSendText( intent.getData().toString(),result.getContents());
         }

@@ -28,7 +28,7 @@ public class ImageResizer {
 
         int scaleFactor = 1;
         if ((targetW > 0) || (targetH > 0)) {
-            scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+            scaleFactor = Math.max(photoW/targetW, photoH/targetH);
         }
 
         bmOptions.inJustDecodeBounds = false;
@@ -50,7 +50,7 @@ public class ImageResizer {
         }
         else {
             path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Bleed/Images/");
-            bitmap = resizeBitmap(1024, 1024, ImagePath);
+            bitmap = resizeBitmap(1024, 768, ImagePath);
         }
         String ResizedPath =imageFile.getName().replaceFirst("[.][^.]+$", "")+".jpeg";
         File ResizedimageFile = new File(path,ResizedPath);
@@ -60,7 +60,7 @@ public class ImageResizer {
             path.mkdirs();
             ResizedimageFile.createNewFile();
             FileOutputStream ostream = new FileOutputStream(ResizedimageFile);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, ostream);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, ostream);
             ostream.close();
 
         } catch (IOException e) {

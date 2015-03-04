@@ -13,6 +13,7 @@ import java.util.ArrayList;
 
 import link.bleed.app.Models.FileToUpload;
 import link.bleed.app.Models.NameValue;
+import link.bleed.app.Utils.LogUtils;
 
 /**
  * Created by ninad on 20-02-2015.
@@ -56,7 +57,7 @@ public class ImageUpload {
                 responseStream = conn.getErrorStream();
             }
             final String serverResponseMessage = getResponseBodyAsString(responseStream);
-
+            LogUtils.LOGD("hubcall", "completed serverResponseMessage is " + serverResponseMessage);
 
 
         } finally {

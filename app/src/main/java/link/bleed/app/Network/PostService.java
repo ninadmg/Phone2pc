@@ -1,13 +1,16 @@
 package link.bleed.app.Network;
 
-import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Binder;
+import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,9 +18,11 @@ import java.util.regex.Pattern;
 
 import link.bleed.app.Constants;
 import link.bleed.app.Models.FileToUpload;
+import link.bleed.app.Models.ImageMap;
 import link.bleed.app.Models.NameValue;
 import link.bleed.app.R;
 import link.bleed.app.Utils.ImageResizer;
+import link.bleed.app.Utils.LogUtils;
 import microsoft.aspnet.signalr.client.Action;
 import microsoft.aspnet.signalr.client.ErrorCallback;
 import microsoft.aspnet.signalr.client.LogLevel;
@@ -26,11 +31,11 @@ import microsoft.aspnet.signalr.client.hubs.HubConnection;
 import microsoft.aspnet.signalr.client.hubs.HubProxy;
 
 
-public class PostService extends IntentService {
+public class PostService extends Service {
 
-    private static final String ACTION_TEXT = "link.bleed.p2c.action.TEXT";
-    private static final String ACTION_IMAGE = "link.bleed.p2c.action.IMAGE";
-
+    private static final String ACTION_TEXT = "link.bleed.p2c.action.text";
+    private static final String ACTION_IMAGE = "link.bleed.p2c.action.image";
+    private static final String ACTION_IMAGE_SHARE= "link.bleed.p2c.action.imageShare";
 
     private static final String QRCODE = "link.bleed.p2c.extra.QRcode";
     private static final String EXTRA_URL = "link.bleed.p2c.extra.URL";
@@ -42,27 +47,36 @@ public class PostService extends IntentService {
     private NotificationManager notificationManager;
     private NotificationCompat.Builder notification;
     private PowerManager.WakeLock wakeLock;
+    private final IBinder mBinder = new LocalBinder();
 
-
-    public static void startActionText(Context context, String param1, String param2) {
+    public static void startActionText(Context context, String qrcode, String param2) {
         Intent intent = new Intent(context, PostService.class);
         intent.setAction(ACTION_TEXT);
-        intent.putExtra(QRCODE, param1);
+        intent.putExtra(QRCODE, qrcode);
         intent.putExtra(EXTRA_URL, param2);
         context.startService(intent);
     }
 
 
-    public static void startActionImage(Context context, String param1, String param2) {
+    public static void startActionImage(Context context, String qrcode, String param2) {
         Intent intent = new Intent(context, PostService.class);
         intent.setAction(ACTION_IMAGE);
-        intent.putExtra(QRCODE, param1);
+        intent.putExtra(QRCODE, qrcode);
         intent.putExtra(EXTRA_URL, param2);
+        context.startService(intent);
+    }
+
+    public static void startActionImageShare(Context context, String qrcode, String Sharecode)
+    {
+        Intent intent = new Intent(context, PostService.class);
+        intent.setAction(ACTION_IMAGE_SHARE);
+        intent.putExtra(QRCODE, qrcode);
+        intent.putExtra(EXTRA_URL, Sharecode);
         context.startService(intent);
     }
 
     public PostService() {
-        super("PostService");
+        super();
         logger = new Logger() {
 
             @Override
@@ -76,14 +90,16 @@ public class PostService extends IntentService {
 
     }
 
+
     @Override
-    protected void onHandleIntent( Intent intent) {
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
         if (intent != null) {
             mIntent = intent;
             makeConnection();
-
         }
 
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
@@ -93,8 +109,33 @@ public class PostService extends IntentService {
         notification = new NotificationCompat.Builder(this);
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "bleed");
+        getWakelock();
+
+    }
+
+    private void getWakelock()
+    {
         wakeLock.acquire();
 
+    }
+
+    private void releaseWakelock()
+    {
+        if(wakeLock.isHeld()) {
+            wakeLock.release();
+        }
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+
+    public class LocalBinder extends Binder {
+       public PostService getService() {
+            // Return this instance of LocalService so clients can call public methods
+            return PostService.this;
+        }
     }
 
     private void makeConnection()
@@ -114,6 +155,8 @@ public class PostService extends IntentService {
 
     }
 
+
+
     private void sendShare()
     {
         String action = mIntent.getAction();
@@ -126,7 +169,30 @@ public class PostService extends IntentService {
             final String param2 = mIntent.getStringExtra(EXTRA_URL);
             handleActionImage(param1, param2);
         }
+        else if (ACTION_IMAGE_SHARE.equals(action))
+        {
+            final String qrcode = mIntent.getStringExtra(QRCODE);
+            final String Sharecode = mIntent.getStringExtra(EXTRA_URL);
+            handleActionImageShare(qrcode, Sharecode);
+        }
     }
+
+    public void handleActionImageShare(final String qrcode, final String sharecode) {
+        if(hubProxy!=null) {
+            hubProxy.invoke("Share", qrcode, "image/jpeg", sharecode);
+            LogUtils.LOGD("hubcall", "sharecalled sharecode is " + sharecode);
+        }else
+        {
+            hubProxy = conn.createHubProxy("bleed");
+            conn.start().done(new Action<Void>() {
+                @Override
+                public void run(Void obj) throws Exception {
+                    handleActionImageShare(qrcode, sharecode);
+                }
+            });
+        }
+    }
+
     private void handleActionText(String param1, String param2) {
 
         Pattern pattern = Pattern.compile("/((([A-Za-z]{3,9}:(?:\\/\\/)?)(?:[-;:&=\\+\\$,\\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\\+\\$,\\w]+@)[A-Za-z0-9.-]+)((?:\\/[\\+~%\\" +
@@ -138,66 +204,87 @@ public class PostService extends IntentService {
         {
             hubProxy.invoke("Share", param1, "text/plain", param2);
         }
-        wakeLock.release();
+        releaseWakelock();
     }
 
-    private void handleActionImage(final String param1, final String ImageUrl) {
+    public void handleActionImage(final String param1, final String ImageUrl) {
 
-        FileToUpload file = new FileToUpload(ImageUrl,"imgi","content","Image");
-        hubProxy.invoke(String.class,"GetFileKey",file.length()).done(new Action<String>() {
-            @Override
-            public void run(String obj) throws Exception {
-
-                UploadThubnail(param1, ImageUrl, obj);
-                uploadImage(param1, ImageUrl, obj);
-
-            }
-        }).onError(new ErrorCallback() {
-            @Override
-            public void onError(Throwable error) {
-                Log.e("ninadlog","error invoke return "+error.getMessage());
-            }
-        });
-    }
-
-
-    private void uploadImage(final String qrCode, String ImageUrl, final String storeKey)
-    {
-
-        ArrayList<NameValue> requestHeaders = new ArrayList<NameValue>();
-        FileToUpload file = new FileToUpload(ImageUrl,"imgi","content","Image");
-        ArrayList<FileToUpload> filesToUpload = new ArrayList<FileToUpload>();
-        filesToUpload.add(file);
-        ArrayList<NameValue> requestParameters = new ArrayList<NameValue>();
-        requestParameters.add(new NameValue("clientId", conn.getConnectionId()));
-        requestParameters.add(new NameValue("isLite","false"));
-        requestParameters.add(new NameValue("storeKey",storeKey));
-
-        try {
-            new ImageUpload().handleFileUpload("1001",Constants.URL+"home/payload","POST"
-                    ,filesToUpload,requestHeaders,requestParameters,new UploadProgressListener(){
-
+        if(hubProxy!=null) {
+            FileToUpload file = new FileToUpload(ImageUrl, "imgi", "content", "Image");
+            hubProxy.invoke(String.class, "GetFileKey", file.length()).done(new Action<String>() {
                 @Override
-                public void uploadStarted() {
-                    createNotification();
+                public void run(String obj) throws Exception {
+
+                    ImageMap.getInstance().setUploadStarted(ImageUrl);
+                    UploadThubnail(param1, ImageUrl, obj);
+                    uploadImage(param1, ImageUrl, obj);
+
+
                 }
-
+            }).onError(new ErrorCallback() {
                 @Override
-                public void uploadUpdate(int percentage) {
-                    updateNotificationProgress(percentage);
-                }
-
-                @Override
-                public void uploadComplete() {
-                    updateNotificationCompleted();
-                    completeImageShare(storeKey,qrCode);
+                public void onError(Throwable error) {
+                    Log.e("ninadlog", "error invoke return " + error.getMessage());
                 }
             });
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+        else
+        {
+            hubProxy = conn.createHubProxy("bleed");
+            conn.start().done(new Action<Void>() {
+                @Override
+                public void run(Void obj) throws Exception {
+                    handleActionImage(param1,ImageUrl);
+                }
+            });
+            Toast.makeText(this,"hub proxy is null",Toast.LENGTH_SHORT).show();
         }
     }
+
+
+    private void uploadImage(final String qrCode,final String ImageUrl, final String storeKey)
+    {
+
+
+            ArrayList<NameValue> requestHeaders = new ArrayList<NameValue>();
+            FileToUpload file = new FileToUpload(ImageUrl, "imgi", "content", "Image");
+            ArrayList<FileToUpload> filesToUpload = new ArrayList<FileToUpload>();
+            filesToUpload.add(file);
+            ArrayList<NameValue> requestParameters = new ArrayList<NameValue>();
+            requestParameters.add(new NameValue("clientId", conn.getConnectionId()));
+            requestParameters.add(new NameValue("isLite", "false"));
+            requestParameters.add(new NameValue("storeKey", storeKey));
+        LogUtils.LOGD("hubcall", "completed uploadImage is " + storeKey);
+            try {
+                new ImageUpload().handleFileUpload("1001", Constants.URL + "home/payload", "POST"
+                        , filesToUpload, requestHeaders, requestParameters, new UploadProgressListener() {
+
+                    @Override
+                    public void uploadStarted() {
+                        createNotification();
+                    }
+
+                    @Override
+                    public void uploadUpdate(int percentage) {
+                        updateNotificationProgress(percentage);
+                    }
+
+                    @Override
+                    public void uploadComplete() {
+                        updateNotificationCompleted();
+                        LogUtils.LOGD("hubcall","completed Storekey is "+storeKey);
+                        completeImageShare(storeKey, qrCode);
+                        ImageMap.getInstance().setShareCode(ImageUrl, storeKey);
+                    }
+                });
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+    }
+
+    
 
     private void UploadThubnail(final String qrCode, String ImageUrl, final String storeKey)
     {
@@ -210,7 +297,7 @@ public class PostService extends IntentService {
         requestParameters.add(new NameValue("isLite","true"));
         requestParameters.add(new NameValue("storeKey",storeKey));
 
-
+        LogUtils.LOGD("hubcall", "completed UploadThubnail is " + storeKey);
         try {
             new ImageUpload().handleFileUpload("1002" , Constants.URL + "home/payload" , "POST"
                     , filesToUpload, requestHeaders, requestParameters, new UploadProgressListener() {
@@ -232,6 +319,7 @@ public class PostService extends IntentService {
                             Log.e("ninadlog","error share return "+error.getMessage());
                         }
                     });
+                    Log.e("ninadlog","liteimage share completed ");
 //                    completeImageShare(storeKey,qrCode);
                 }
             });
@@ -241,17 +329,31 @@ public class PostService extends IntentService {
     }
 
 
-    private void completeImageShare(String fileKey,String param1)
+    private void completeImageShare(final String fileKey, final String param1)
     {
-        hubProxy.invoke("Share",param1,"image/jpeg",fileKey).onError(new ErrorCallback() {
-            @Override
-            public void onError(Throwable error) {
-                Log.e("ninadlog","error share return "+error.getMessage());
-            }
-        });
-        if(wakeLock.isHeld()) {
-            wakeLock.release();
-        }
+//        if(hubProxy!=null) {
+            LogUtils.LOGD("hubcall","sharecalled Storekey is "+fileKey);
+            hubProxy.invoke("Share", param1, "image/jpeg", fileKey).onError(new ErrorCallback() {
+                @Override
+                public void onError(Throwable error) {
+                    Log.e("ninadlog", "error share return " + error.getMessage());
+                }
+            });
+//        }
+//        else
+//        {
+//            hubProxy = conn.createHubProxy("bleed");
+//            conn.start().done(new Action<Void>() {
+//                @Override
+//                public void run(Void obj) throws Exception {
+//                    completeImageShare(fileKey,param1);
+//                }
+//            });
+//
+//
+//            Toast.makeText(this, "hub proxy is null", Toast.LENGTH_SHORT).show();
+//        }
+        releaseWakelock();
     }
 
      private void createNotification() {
@@ -275,9 +377,7 @@ public class PostService extends IntentService {
 
     private void updateNotificationCompleted() {
         stopForeground(true);
-        if(wakeLock.isHeld()) {
-            wakeLock.release();
-        }
+        releaseWakelock();
         notificationManager.cancel(1);
 
     }

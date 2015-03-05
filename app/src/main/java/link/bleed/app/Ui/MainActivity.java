@@ -24,7 +24,7 @@ import me.dm7.barcodescanner.zbar.ZBarScannerView;
 
 public class MainActivity extends ActionBarActivity implements ZBarScannerView.ResultHandler{
 
-    FrameLayout frameLayout;
+    private FrameLayout frameLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

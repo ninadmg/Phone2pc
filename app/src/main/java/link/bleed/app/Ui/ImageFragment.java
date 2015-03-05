@@ -21,9 +21,9 @@ public class ImageFragment extends Fragment {
 
     private static final String IMAGE_URL = "link.bleed.p2c.ImageFragment.URL";
     private static final String QRCODE = "link.bleed.p2c.ImageFragment.qrcode";
-    ImageView imageView;
-    ImageMap map = ImageMap.getInstance();
-    String qrcode;
+    private ImageView imageView;
+    private final ImageMap map = ImageMap.getInstance();
+    private String qrcode;
     public ImageFragment() {
         // Required empty public constructor
     }

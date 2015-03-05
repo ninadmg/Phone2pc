@@ -29,14 +29,14 @@ public class ImagePagerActivity extends ActionBarActivity {
 
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
-    PostService mService;
+    private PostService mService;
     boolean mBound = false;
-    ImageMap map = ImageMap.getInstance();
-    ArrayList<Uri> imageUris;
-    String qrcode;
+    private ImageMap map = ImageMap.getInstance();
+    private ArrayList<Uri> imageUris;
+    private String qrcode;
     public static final String IMAGGELIST = "link.bleed.p2c.extra.imagelist";
     public static final String QRCODE = "link.bleed.p2c.extra.qrcode";
-    LinePageIndicator pageIndicator;
+    private LinePageIndicator pageIndicator;
 
 
 

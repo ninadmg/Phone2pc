@@ -24,7 +24,7 @@ public class ImageUpload {
     private static final int BUFFER_SIZE = 4096;
     private static final String NEW_LINE = "\r\n";
     private static final String TWO_HYPHENS = "--";
-    UploadProgressListener UploadProgress;
+    private UploadProgressListener UploadProgress;
     public void handleFileUpload(final String uploadId, final String url, final String method,
                                   final ArrayList<FileToUpload> filesToUpload,
                                   final ArrayList<NameValue> requestHeaders,

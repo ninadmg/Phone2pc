@@ -34,6 +34,17 @@ public class FileToUpload implements Parcelable {
         fileName = in.readString();
     }
 
+      public static final Parcelable.Creator<FileToUpload> CREATOR
+            = new Parcelable.Creator<FileToUpload>() {
+        public FileToUpload createFromParcel(Parcel in) {
+            return new FileToUpload(in);
+        }
+        public FileToUpload[] newArray(int size) {
+            return new FileToUpload[size];
+        }
+    };
+
+
     public final InputStream getStream() throws FileNotFoundException {
         return new FileInputStream(file);
     }

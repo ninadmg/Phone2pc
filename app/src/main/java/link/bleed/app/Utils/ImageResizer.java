@@ -19,7 +19,7 @@ public class ImageResizer {
     }
 
 
-    public static Bitmap resizeBitmap(int targetW, int targetH ,String photoPath) {
+    private static Bitmap resizeBitmap(int targetW, int targetH, String photoPath) {
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(photoPath, bmOptions);

@@ -10,7 +10,6 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,6 +22,7 @@ import link.bleed.app.Models.NameValue;
 import link.bleed.app.R;
 import link.bleed.app.Utils.ImageResizer;
 import link.bleed.app.Utils.LogUtils;
+import link.bleed.app.Utils.SharePrefUtils;
 import microsoft.aspnet.signalr.client.Action;
 import microsoft.aspnet.signalr.client.ErrorCallback;
 import microsoft.aspnet.signalr.client.LogLevel;
@@ -40,10 +40,10 @@ public class PostService extends Service {
     private static final String QRCODE = "link.bleed.p2c.extra.QRcode";
     private static final String EXTRA_URL = "link.bleed.p2c.extra.URL";
 
-    HubConnection conn;
-    HubProxy hubProxy;
-    Logger logger;
-    Intent mIntent;
+    private HubConnection conn;
+    private HubProxy hubProxy;
+    private Logger logger;
+    private Intent mIntent;
     private NotificationManager notificationManager;
     private NotificationCompat.Builder notification;
     private PowerManager.WakeLock wakeLock;
@@ -96,7 +96,12 @@ public class PostService extends Service {
 
         if (intent != null) {
             mIntent = intent;
-            makeConnection();
+            makeConnection(new Connected() {
+                @Override
+                public void onConnected() {
+                    sendShare();
+                }
+            });
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -138,13 +143,14 @@ public class PostService extends Service {
         }
     }
 
-    private void makeConnection()
+    private void makeConnection(final Connected connected)
     {
-        hubProxy = conn.createHubProxy("bleed");
+        hubProxy = conn.createHubProxy("bleedv2");
         conn.start().done(new Action<Void>() {
             @Override
             public void run(Void obj) throws Exception {
-                sendShare();
+                registerClient(connected);
+
             }
         }).onError(new ErrorCallback() {
             @Override
@@ -155,6 +161,33 @@ public class PostService extends Service {
 
     }
 
+
+    private void registerClient(final Connected connected)
+    {
+        String id = getClientId();
+        hubProxy.invoke(String.class,"Register",id).done(new Action<String>() {
+            @Override
+            public void run(String obj) throws Exception {
+                setClientId(obj);
+                connected.onConnected();
+            }
+        }).onError(new ErrorCallback() {
+            @Override
+            public void onError(Throwable error) {
+                Log.e("ninadlog", "error invoke Register " + error.getMessage());
+            }
+        });;
+    }
+
+    private String getClientId()
+    {
+       return SharePrefUtils.getClientId(this);
+    }
+
+    private void setClientId(String id)
+    {
+        SharePrefUtils.setClientID(this,id);
+    }
 
 
     private void sendShare()
@@ -183,13 +216,14 @@ public class PostService extends Service {
             LogUtils.LOGD("hubcall", "sharecalled sharecode is " + sharecode);
         }else
         {
-            hubProxy = conn.createHubProxy("bleed");
-            conn.start().done(new Action<Void>() {
+
+            makeConnection(new Connected() {
                 @Override
-                public void run(Void obj) throws Exception {
+                public void onConnected() {
                     handleActionImageShare(qrcode, sharecode);
                 }
             });
+
         }
     }
 
@@ -230,14 +264,13 @@ public class PostService extends Service {
         }
         else
         {
-            hubProxy = conn.createHubProxy("bleed");
-            conn.start().done(new Action<Void>() {
+            makeConnection(new Connected() {
                 @Override
-                public void run(Void obj) throws Exception {
+                public void onConnected() {
                     handleActionImage(param1,ImageUrl);
                 }
             });
-            Toast.makeText(this,"hub proxy is null",Toast.LENGTH_SHORT).show();
+
         }
     }
 
@@ -251,12 +284,12 @@ public class PostService extends Service {
             ArrayList<FileToUpload> filesToUpload = new ArrayList<FileToUpload>();
             filesToUpload.add(file);
             ArrayList<NameValue> requestParameters = new ArrayList<NameValue>();
-            requestParameters.add(new NameValue("clientId", conn.getConnectionId()));
-            requestParameters.add(new NameValue("isLite", "false"));
-            requestParameters.add(new NameValue("storeKey", storeKey));
+//            requestParameters.add(new NameValue("clientId", conn.getConnectionId()));
+//            requestParameters.add(new NameValue("isLite", "false"));
+//            requestParameters.add(new NameValue("storeKey", storeKey));
         LogUtils.LOGD("hubcall", "completed uploadImage is " + storeKey);
             try {
-                new ImageUpload().handleFileUpload("1001", Constants.URL + "home/payload", "POST"
+                new ImageUpload().handleFileUpload("1001", Constants.URL + "home/payload/"+conn.getConnectionId()+"/"+storeKey+"/Large.jpg", "POST"
                         , filesToUpload, requestHeaders, requestParameters, new UploadProgressListener() {
 
                     @Override
@@ -284,7 +317,7 @@ public class PostService extends Service {
 
     }
 
-    
+
 
     private void UploadThubnail(final String qrCode, String ImageUrl, final String storeKey)
     {
@@ -293,13 +326,13 @@ public class PostService extends Service {
         ArrayList<FileToUpload> filesToUpload = new ArrayList<FileToUpload>();
         filesToUpload.add(file);
         ArrayList<NameValue> requestParameters = new ArrayList<NameValue>();
-        requestParameters.add(new NameValue("clientId", conn.getConnectionId()));
-        requestParameters.add(new NameValue("isLite","true"));
-        requestParameters.add(new NameValue("storeKey",storeKey));
+//        requestParameters.add(new NameValue("clientId", conn.getConnectionId()));
+//        requestParameters.add(new NameValue("isLite","true"));
+//        requestParameters.add(new NameValue("storeKey",storeKey));
 
         LogUtils.LOGD("hubcall", "completed UploadThubnail is " + storeKey);
         try {
-            new ImageUpload().handleFileUpload("1002" , Constants.URL + "home/payload" , "POST"
+            new ImageUpload().handleFileUpload("1002" , Constants.URL + "home/payload/"+conn.getConnectionId()+"/"+storeKey+"/thumb.jpg" , "POST"
                     , filesToUpload, requestHeaders, requestParameters, new UploadProgressListener() {
                 @Override
                 public void uploadStarted() {
@@ -331,7 +364,7 @@ public class PostService extends Service {
 
     private void completeImageShare(final String fileKey, final String param1)
     {
-//        if(hubProxy!=null) {
+
             LogUtils.LOGD("hubcall","sharecalled Storekey is "+fileKey);
             hubProxy.invoke("Share", param1, "image/jpeg", fileKey).onError(new ErrorCallback() {
                 @Override
@@ -339,20 +372,7 @@ public class PostService extends Service {
                     Log.e("ninadlog", "error share return " + error.getMessage());
                 }
             });
-//        }
-//        else
-//        {
-//            hubProxy = conn.createHubProxy("bleed");
-//            conn.start().done(new Action<Void>() {
-//                @Override
-//                public void run(Void obj) throws Exception {
-//                    completeImageShare(fileKey,param1);
-//                }
-//            });
-//
-//
-//            Toast.makeText(this, "hub proxy is null", Toast.LENGTH_SHORT).show();
-//        }
+
         releaseWakelock();
     }
 
@@ -382,7 +402,9 @@ public class PostService extends Service {
 
     }
 
-
-
+    interface Connected
+    {
+      void onConnected();
+    }
 
 }

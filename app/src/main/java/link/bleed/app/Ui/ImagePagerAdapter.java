@@ -12,8 +12,8 @@ import java.util.ArrayList;
  */
 public class ImagePagerAdapter extends FragmentStatePagerAdapter {
 
-    ArrayList<Uri> imageUris ;
-    String qrcode;
+    private ArrayList<Uri> imageUris ;
+    private String qrcode;
     public ImagePagerAdapter(FragmentManager fm,ArrayList<Uri> imageUris,String qrcode) {
         super(fm);
         this.imageUris =imageUris;

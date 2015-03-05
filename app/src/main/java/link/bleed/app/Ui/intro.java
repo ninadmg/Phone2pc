@@ -22,8 +22,7 @@ public class intro extends FragmentActivity {
 
     private static final int NUM_PAGES = 4;
     private ViewPager mPager;
-    private PagerAdapter mPagerAdapter;
-    pagerItem[] pagerItems = new pagerItem[4];
+    private pagerItem[] pagerItems = new pagerItem[4];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +31,7 @@ public class intro extends FragmentActivity {
         setContentView(R.layout.activity_main);
         initPages();
         mPager = (ViewPager) findViewById(R.id.container);
-        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
+        PagerAdapter mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
         LinePageIndicator pageIndicator = (LinePageIndicator) findViewById(R.id.titles);
         setupIndicator(pageIndicator);

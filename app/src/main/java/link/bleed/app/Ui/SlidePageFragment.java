@@ -16,7 +16,7 @@ import link.bleed.app.R;
  */
 public class SlidePageFragment extends Fragment {
 
-    pagerItem page;
+    private pagerItem page;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

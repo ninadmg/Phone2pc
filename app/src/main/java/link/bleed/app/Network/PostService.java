@@ -145,20 +145,21 @@ public class PostService extends Service {
 
     private void makeConnection(final Connected connected)
     {
-        hubProxy = conn.createHubProxy("bleedv2");
-        conn.start().done(new Action<Void>() {
-            @Override
-            public void run(Void obj) throws Exception {
-                registerClient(connected);
+        if(hubProxy==null) {
+            hubProxy = conn.createHubProxy("bleedv2");
+            conn.start().done(new Action<Void>() {
+                @Override
+                public void run(Void obj) throws Exception {
+                    registerClient(connected);
 
-            }
-        }).onError(new ErrorCallback() {
-            @Override
-            public void onError(Throwable error) {
-                Log.e("bleed",error.getMessage());
-            }
-        });
-
+                }
+            }).onError(new ErrorCallback() {
+                @Override
+                public void onError(Throwable error) {
+                    Log.e("bleed", error.getMessage());
+                }
+            });
+        }
     }
 
 
@@ -289,7 +290,7 @@ public class PostService extends Service {
 //            requestParameters.add(new NameValue("storeKey", storeKey));
         LogUtils.LOGD("hubcall", "completed uploadImage is " + storeKey);
             try {
-                new ImageUpload().handleFileUpload("1001", Constants.URL + "home/payload/"+conn.getConnectionId()+"/"+storeKey+"/Large.jpg", "POST"
+                new ImageUpload().handleFileUpload("1001", Constants.URL + "payload/"+getClientId()+"/"+storeKey+"/Large.jpg", "POST"
                         , filesToUpload, requestHeaders, requestParameters, new UploadProgressListener() {
 
                     @Override
@@ -332,7 +333,7 @@ public class PostService extends Service {
 
         LogUtils.LOGD("hubcall", "completed UploadThubnail is " + storeKey);
         try {
-            new ImageUpload().handleFileUpload("1002" , Constants.URL + "home/payload/"+conn.getConnectionId()+"/"+storeKey+"/thumb.jpg" , "POST"
+            new ImageUpload().handleFileUpload("1002" , Constants.URL + "payload/"+getClientId()+"/"+storeKey+"/thumb.jpg" , "POST"
                     , filesToUpload, requestHeaders, requestParameters, new UploadProgressListener() {
                 @Override
                 public void uploadStarted() {

@@ -3,6 +3,7 @@ package link.bleed.app.Ui;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -12,8 +13,10 @@ import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 
+import java.io.File;
 import java.util.ArrayList;
 
+import link.bleed.app.Models.ImageMap;
 import link.bleed.app.Network.PostService;
 import link.bleed.app.R;
 import link.bleed.app.Utils.ImageResizer;
@@ -51,13 +54,21 @@ public class MainActivity extends ActionBarActivity implements ZBarScannerView.R
     protected void onStart() {
         super.onStart();
 
+
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.frame,new ScannerFragment(),"scan")
                 .commit();
 
     }
 
-
+    private void clearOldItems()
+    {
+        ImageMap.getInstance().clearMap();
+        File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Bleed/.Thumb/");
+        path.delete();
+        path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Bleed/.Images/");
+        path.delete();
+    }
 
     private void handleSendVideo(Intent intent) {
 

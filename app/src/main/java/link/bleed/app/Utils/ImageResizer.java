@@ -45,11 +45,11 @@ public class ImageResizer {
         Bitmap bitmap;
         if(thumb)
         {
-            path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Bleed/Thumb/");
+            path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Bleed/.Thumb/");
             bitmap = resizeBitmap(1024, 768, ImagePath);
         }
         else {
-            path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Bleed/Images/");
+            path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Bleed/.Images/");
             bitmap = resizeBitmap(1024, 768, ImagePath);
         }
         String ResizedPath =imageFile.getName().replaceFirst("[.][^.]+$", "")+".jpeg";

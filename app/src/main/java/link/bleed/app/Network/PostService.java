@@ -14,6 +14,8 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
@@ -45,6 +47,8 @@ public class PostService extends Service {
 
     private static final String QRCODE = "link.bleed.p2c.extra.QRcode";
     private static final String EXTRA_URL = "link.bleed.p2c.extra.URL";
+
+    private long WAKELOCKTIMEOUT = 1000*60*2;
 
     private HubConnection conn;
     private HubProxy hubProxy;
@@ -126,7 +130,7 @@ public class PostService extends Service {
 
     private void getWakelock()
     {
-        wakeLock.acquire();
+        wakeLock.acquire(WAKELOCKTIMEOUT);
 
     }
 
@@ -245,9 +249,10 @@ public class PostService extends Service {
 
     private void handleActionText(String param1, String param2) {
 
-        Pattern pattern = Pattern.compile("/((([A-Za-z]{3,9}:(?:\\/\\/)?)(?:[-;:&=\\+\\$,\\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\\+\\$,\\w]+@)[A-Za-z0-9.-]+)((?:\\/[\\+~%\\" +
-                "/._]*)?\\??(?:[-\\+=&;%@.\\w_]*)#?(?:[\\w]*))?)/");
-        if(!pattern.matcher(param2).matches()) {
+//        Pattern pattern = Pattern.compile("/((([A-Za-z]{3,9}:(?:\\/\\/)?)(?:[-;:&=\\+\\$,\\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\\+\\$,\\w]+@)[A-Za-z0-9.-]+)((?:\\/[\\+~%\\" +
+//                "/._]*)?\\??(?:[-\\+=&;%@.\\w_]*)#?(?:[\\w]*))?)/");
+
+        if(isValidUrl(param2)) {
             hubProxy.invoke("Share", param1, "text/uri", param2).done(new Action<Void>() {
                 @Override
                 public void run(Void obj) throws Exception {
@@ -265,6 +270,20 @@ public class PostService extends Service {
             hubProxy.invoke("Share", param1, "text/plain", param2);
         }
         releaseWakelock();
+    }
+
+
+    private boolean isValidUrl(String Url)
+    {
+        boolean isValid;
+        try {
+            new URL(Url);
+            isValid=true;
+        }catch (MalformedURLException e)
+        {
+            isValid=false;
+        }
+        return isValid;
     }
 
     public void handleActionImage(final String param1, final String ImageUrl) {

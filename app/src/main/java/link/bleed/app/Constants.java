@@ -7,5 +7,5 @@ public class Constants {
 
     public static final String URL = "http://go.mathewjibin.com/";
 //    public static final String URL = "http://192.168.2.101/takemethere/";
-
+//    public static final String URL = "http://192.168.1.50/takemethere/"; //mathew home
 }

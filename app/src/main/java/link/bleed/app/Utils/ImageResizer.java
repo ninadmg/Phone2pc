@@ -46,7 +46,7 @@ public class ImageResizer {
         if(thumb)
         {
             path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Bleed/Thumb/");
-            bitmap = resizeBitmap(96, 96, ImagePath);
+            bitmap = resizeBitmap(1024, 768, ImagePath);
         }
         else {
             path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Bleed/Images/");
@@ -60,7 +60,13 @@ public class ImageResizer {
             path.mkdirs();
             ResizedimageFile.createNewFile();
             FileOutputStream ostream = new FileOutputStream(ResizedimageFile);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, ostream);
+            if (thumb)
+           {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 5, ostream);
+           }else
+            {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, ostream);
+            }
             ostream.close();
 
         } catch (IOException e) {

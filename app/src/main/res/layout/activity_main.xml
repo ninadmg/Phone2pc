@@ -2,6 +2,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:minHeight="?attr/actionBarSize"
+        android:background="@color/primary_color" />
+
     <com.viewpagerindicator.LinePageIndicator
         android:id="@+id/titles"
         android:layout_height="wrap_content"
@@ -12,8 +19,10 @@
     <android.support.v4.view.ViewPager
         android:id="@+id/container"
         android:layout_above="@id/titles"
+        android:layout_below="@id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_margin="5dp"/>
 
 
 

@@ -10,6 +10,7 @@ import android.os.IBinder;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 
 import com.viewpagerindicator.LinePageIndicator;
 
@@ -46,9 +47,20 @@ public class ImagePagerActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
         mPager = (ViewPager) findViewById(R.id.container);
         pageIndicator = (LinePageIndicator) findViewById(R.id.titles);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setupToolbar(toolbar);
+        if(getSupportActionBar()!=null) {
+            setSupportActionBar(toolbar);
+        }
     }
 
+    private void setupToolbar(Toolbar toolbar)
+    {
+        toolbar.setTitle(" "+getString(R.string.app_name));
+        toolbar.setLogo(R.drawable.ic_launcher);
+        toolbar.setTitleTextColor(getResources().getColor(R.color.text_color));
 
+    }
 
     @Override
     protected void onStart() {

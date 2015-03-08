@@ -7,6 +7,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 
 import com.crashlytics.android.Crashlytics;
 import com.viewpagerindicator.LinePageIndicator;
@@ -18,7 +20,7 @@ import link.bleed.app.R;
 /**
  * Created by ninad on 05-02-2015.
  */
-public class intro extends FragmentActivity {
+public class intro extends ActionBarActivity {
 
     private static final int NUM_PAGES = 4;
     private ViewPager mPager;
@@ -35,6 +37,19 @@ public class intro extends FragmentActivity {
         mPager.setAdapter(mPagerAdapter);
         LinePageIndicator pageIndicator = (LinePageIndicator) findViewById(R.id.titles);
         setupIndicator(pageIndicator);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setupToolbar(toolbar);
+        if(getSupportActionBar()!=null) {
+            setSupportActionBar(toolbar);
+        }
+    }
+
+    private void setupToolbar(Toolbar toolbar)
+    {
+        toolbar.setTitle(" "+getString(R.string.app_name));
+        toolbar.setLogo(R.drawable.ic_launcher);
+        toolbar.setTitleTextColor(getResources().getColor(R.color.text_color));
+
     }
 
     private void setupIndicator(LinePageIndicator pageIndicator)

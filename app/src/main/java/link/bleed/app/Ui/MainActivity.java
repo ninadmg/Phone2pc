@@ -54,7 +54,7 @@ public class MainActivity extends ActionBarActivity implements ZBarScannerView.R
     protected void onStart() {
         super.onStart();
 
-
+        clearOldItems();
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.frame,new ScannerFragment(),"scan")
                 .commit();

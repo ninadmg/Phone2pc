@@ -36,6 +36,12 @@ public class ImageMap {
         return code;
     }
 
+    public void clearMap()
+    {
+        compressedAddressTable.clear();
+        shareCodeTable.clear();
+    }
+
     public void setShareCode(String fileAddress, String shareCode) {
         String code = shareCodeTable.get(fileAddress);
         if(code!=null && code.equals(UPLODING))

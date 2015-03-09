@@ -1,5 +1,6 @@
 package link.bleed.app.Models;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 /**
@@ -14,7 +15,7 @@ public class ImageMap {
     public static ImageMap getInstance() {
         return ourInstance;
     }
-
+    private ArrayList<UploadObserver> observers = new ArrayList<UploadObserver>();
     private ImageMap() {
     }
 
@@ -22,17 +23,27 @@ public class ImageMap {
         return compressedAddressTable.get(fileAddress);
     }
 
+    public void setObservers(UploadObserver observer)
+    {
+        observers.add(observer);
+    }
+    public void removeObserver(UploadObserver observer)
+    {
+        observers.remove(observer);
+    }
+
+
     public void setCompressedAddress(String fileAddress, String compressedAddress) {
         compressedAddressTable.put(fileAddress,compressedAddress);
     }
 
     public String getShareCode(String fileAddress) {
         String code = shareCodeTable.get(fileAddress);
+
         if(code!=null && code.equals(UPLODING))
         {
             code=null;
         }
-
         return code;
     }
 
@@ -40,6 +51,7 @@ public class ImageMap {
     {
         compressedAddressTable.clear();
         shareCodeTable.clear();
+        observers.clear();
     }
 
     public void setShareCode(String fileAddress, String shareCode) {
@@ -48,11 +60,17 @@ public class ImageMap {
         {
             shareCodeTable.remove(fileAddress);
         }
-
+        updateObserver(fileAddress);
         shareCodeTable.put(fileAddress,shareCode);
     }
 
-
+    private void updateObserver(String fileAddress)
+    {
+        for(UploadObserver observer:observers)
+        {
+            observer.uploadCompleted(fileAddress);
+        }
+    }
 
     public void setUploadStarted(String fileAddress)
     {

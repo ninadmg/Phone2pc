@@ -9,8 +9,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import link.bleed.app.Models.ImageMap;
+import link.bleed.app.Models.UploadObserver;
+import link.bleed.app.R;
 import link.bleed.app.Utils.ImageResizer;
 import link.bleed.app.Utils.Utilities;
 
@@ -24,6 +27,8 @@ public class ImageFragment extends Fragment {
     private ImageView imageView;
     private final ImageMap map = ImageMap.getInstance();
     private String qrcode;
+    ProgressBar progressBar;
+    UploadObserver observer;
     public ImageFragment() {
         // Required empty public constructor
     }
@@ -41,9 +46,11 @@ public class ImageFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-         imageView = new ImageView(getActivity());
-
-        return imageView;
+        View view = inflater.inflate(
+                R.layout.image_pager_cell, container, false);
+        imageView = (ImageView) view.findViewById(R.id.imageView);
+        progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
+        return view;
     }
 
     @Override
@@ -55,8 +62,53 @@ public class ImageFragment extends Fragment {
         qrcode = getArguments().getString(QRCODE);
 
         String compressedpath = getCompressedPath(imagepath);
-
         imageView.setImageBitmap(BitmapFactory.decodeFile(compressedpath));
+        if(checkisUpoading(compressedpath))
+        {
+            showloading();
+            addobservable(compressedpath);
+        }
+        else
+        {
+            removeLoading();
+        }
+    }
+
+    private void addobservable(final String compressedpath) {
+        if(observer==null) {
+            observer = new UploadObserver() {
+                @Override
+                public void uploadCompleted(String imagepath) {
+                    if (compressedpath.equals(imagepath)) ;
+                    {
+                        removeLoading();
+                    }
+                }
+            };
+            map.setObservers(observer);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        map.removeObserver(observer);
+        super.onDestroy();
+    }
+
+    private void removeLoading()
+    {
+        progressBar.setVisibility(View.GONE);
+    }
+
+    private void showloading() {
+
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    private boolean checkisUpoading(String compressedpath)
+    {
+        return (map.getShareCode(compressedpath)==null|| map.isUploading(compressedpath));
+
     }
 
     private String getCompressedPath(String path)

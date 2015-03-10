@@ -74,8 +74,10 @@ public class ImagePagerActivity extends ActionBarActivity {
 
     private void setupadapter()
     {
+        int pos = mPager.getCurrentItem();
         mPagerAdapter = new ImagePagerAdapter(getSupportFragmentManager(),imageUris,qrcode);
         mPager.setAdapter(mPagerAdapter);
+        mPager.setCurrentItem(pos);
         Listner();
         setupIndicator(pageIndicator);
 

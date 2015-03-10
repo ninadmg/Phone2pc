@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 
 import link.bleed.app.Constants;
 import link.bleed.app.Models.FileToUpload;
@@ -157,10 +156,11 @@ public class PostService extends Service {
     {
         if(hubProxy==null)
         {
+            LogUtils.LOGD("ninad","creating hub proxy");
             hubProxy = conn.createHubProxy("bleedv2");
         }
         if(conn.getState()!= ConnectionState.Connected) {
-
+            LogUtils.LOGD("ninad","connecting client");
             ClientTransport transport=resolveTransport();
             conn.start(transport).done(new Action<Void>() {
                 @Override
@@ -177,6 +177,7 @@ public class PostService extends Service {
         }
         else
         {
+            LogUtils.LOGD("ninad","register client");
             registerClient(connected);
         }
     }

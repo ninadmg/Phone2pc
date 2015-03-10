@@ -5,6 +5,6 @@ package link.bleed.app.Models;
  */
 public interface UploadObserver {
 
-    public void uploadCompleted(String imagepath);
+    void uploadCompleted(String imagepath);
 
 }

@@ -15,6 +15,7 @@ import link.bleed.app.Models.ImageMap;
 import link.bleed.app.Models.UploadObserver;
 import link.bleed.app.R;
 import link.bleed.app.Utils.ImageResizer;
+import link.bleed.app.Utils.LogUtils;
 import link.bleed.app.Utils.Utilities;
 
 /**
@@ -29,6 +30,7 @@ public class ImageFragment extends Fragment {
     private String qrcode;
     ProgressBar progressBar;
     UploadObserver observer;
+    String compressedpath;
     public ImageFragment() {
         // Required empty public constructor
     }
@@ -61,43 +63,69 @@ public class ImageFragment extends Fragment {
         String imagepath = Utilities.getPath(getActivity(),imageuri);
         qrcode = getArguments().getString(QRCODE);
 
-        String compressedpath = getCompressedPath(imagepath);
+         compressedpath = getCompressedPath(imagepath);
         imageView.setImageBitmap(BitmapFactory.decodeFile(compressedpath));
-        if(checkisUpoading(compressedpath))
-        {
-            showloading();
-            addobservable(compressedpath);
-        }
-        else
-        {
-            removeLoading();
-        }
+
     }
 
-    private void addobservable(final String compressedpath) {
-        if(observer==null) {
+    private void addObservable(final String compressedpath) {
+
             observer = new UploadObserver() {
                 @Override
                 public void uploadCompleted(String imagepath) {
-                    if (compressedpath.equals(imagepath)) ;
+                    if (compressedpath.equals(imagepath))
                     {
                         removeLoading();
                     }
                 }
             };
             map.setObservers(observer);
-        }
+
     }
 
     @Override
-    public void onDestroy() {
+    public void onStop() {
+        super.onStop();
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(checkisUpoading(compressedpath))
+        {
+            showloading();
+            addObservable(compressedpath);
+        }
+        else
+        {
+            removeLoading();
+        }
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
         map.removeObserver(observer);
-        super.onDestroy();
+        observer=null;
     }
 
     private void removeLoading()
     {
-        progressBar.setVisibility(View.GONE);
+        try {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    progressBar.setVisibility(View.GONE);
+
+                }
+            });
+        }catch (Exception e){
+            LogUtils.LOGD("ninad", "removeLoading "+e.getMessage());
+        }
     }
 
     private void showloading() {

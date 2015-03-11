@@ -352,7 +352,9 @@ public class PostService extends Service {
                     public void uploadComplete() {
                         updateNotificationCompleted();
                         LogUtils.LOGD("hubcall","completed Storekey is "+storeKey);
-                        completeImageShare(storeKey, qrCode);
+                        if(ImageMap.getInstance().isCurrentImage(ImageUrl)){
+                            completeImageShare(storeKey, qrCode);
+                        }
                         ImageMap.getInstance().setShareCode(ImageUrl, storeKey);
                     }
                 });

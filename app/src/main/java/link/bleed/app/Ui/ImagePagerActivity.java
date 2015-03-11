@@ -167,6 +167,7 @@ public class ImagePagerActivity extends ActionBarActivity {
     private void setImageInWeb(String compressedpath)
     {
         if(!map.isUploading(compressedpath)) {
+            map.setCurrentImage(compressedpath);
             String sharecode = map.getShareCode(compressedpath);
             LogUtils.LOGD("hubcall", "completed setImageInWeb "+sharecode );
             LogUtils.LOGD("hubcall", "completed compressedpath "+compressedpath );

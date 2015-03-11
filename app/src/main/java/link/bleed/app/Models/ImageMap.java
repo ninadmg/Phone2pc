@@ -12,6 +12,7 @@ public class ImageMap {
     private Hashtable<String ,String> shareCodeTable = new Hashtable<String ,String>();
     private static ImageMap ourInstance = new ImageMap();
     private static final String UPLODING = "uploading";
+    private String currentImage;
     public static ImageMap getInstance() {
         return ourInstance;
     }
@@ -34,7 +35,17 @@ public class ImageMap {
 
 
     public void setCompressedAddress(String fileAddress, String compressedAddress) {
-        compressedAddressTable.put(fileAddress,compressedAddress);
+        compressedAddressTable.put(fileAddress, compressedAddress);
+    }
+
+    public void setCurrentImage(String currentImage)
+    {
+        this.currentImage = currentImage;
+    }
+
+    public boolean isCurrentImage(String currentImage)
+    {
+        return (this.currentImage==null)||(this.currentImage.equals(currentImage)) ;
     }
 
     public String getShareCode(String fileAddress) {

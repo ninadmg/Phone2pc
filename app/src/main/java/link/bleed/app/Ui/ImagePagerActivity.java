@@ -89,6 +89,7 @@ public class ImagePagerActivity extends ActionBarActivity {
         super.onStop();
         // Unbind from the service
         if (mBound) {
+            mService.stopService();
             unbindService(mConnection);
             mBound = false;
         }

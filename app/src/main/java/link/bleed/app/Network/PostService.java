@@ -57,6 +57,7 @@ public class PostService extends Service {
     private NotificationCompat.Builder notification;
     private PowerManager.WakeLock wakeLock;
     private final IBinder mBinder = new LocalBinder();
+    private boolean stopservice=false;
 
     public static void startActionText(Context context, String qrcode, String param2) {
         Intent intent = new Intent(context, PostService.class);
@@ -131,6 +132,11 @@ public class PostService extends Service {
     {
         wakeLock.acquire(WAKELOCKTIMEOUT);
 
+    }
+
+    public void stopService()
+    {
+        PostService.this.stopSelf();
     }
 
     private void releaseWakelock()
@@ -218,10 +224,12 @@ public class PostService extends Service {
             final String qrcode = mIntent.getStringExtra(QRCODE);
             final String param2 = mIntent.getStringExtra(EXTRA_URL);
             handleActionText(qrcode, param2);
+            stopservice=true;
         } else if (ACTION_IMAGE.equals(action)) {
             final String qrcode = mIntent.getStringExtra(QRCODE);
             final String param2 = mIntent.getStringExtra(EXTRA_URL);
             handleActionImage(qrcode, param2);
+            stopservice=true;
         }
         else if (ACTION_IMAGE_SHARE.equals(action))
         {
@@ -271,6 +279,7 @@ public class PostService extends Service {
             hubProxy.invoke("Share", param1, "text/plain", param2);
         }
         releaseWakelock();
+        stopService();
     }
 
 
@@ -447,7 +456,10 @@ public class PostService extends Service {
         stopForeground(true);
         releaseWakelock();
         notificationManager.cancel(1);
-
+        if(stopservice)
+        {
+            stopService();
+        }
     }
 
     private ClientTransport resolveTransport()

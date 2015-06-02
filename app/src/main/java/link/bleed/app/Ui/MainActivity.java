@@ -134,9 +134,9 @@ public class MainActivity extends ActionBarActivity implements ZBarScannerView.R
         if(action.equals(Intent.ACTION_SEND))
         {
             if ("text/plain".equals(type)) {
-                handleSendText(intent.getClipData().getItemAt(0).getText().toString(),result.getContents()); // Handle text being sent
+                handleSendText(intent.getStringExtra(Intent.EXTRA_TEXT), result.getContents()); // Handle text being sent
             } else if (type.startsWith("image/")) {
-                handleSendImage(Utilities.getPath(this, intent.getClipData().getItemAt(0).getUri()),result.getContents()); // Handle single image being sent
+                handleSendImage(Utilities.getPath(this,  (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM)),result.getContents()); // Handle single image being sent
             }
             else if(type.startsWith("video/")){
                 handleSendVideo(intent);

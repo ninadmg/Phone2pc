@@ -22,8 +22,8 @@ android {
         applicationId "link.bleed.app"
         minSdkVersion 16
         targetSdkVersion 21
-        versionCode 3
-        versionName "1.1.1"
+        versionCode 4
+        versionName "1.1.2"
     }
     buildTypes {
         release {
